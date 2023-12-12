@@ -1,0 +1,61 @@
+diff --git a/src/main.rs b/src/main.rs
+index baf0124..bdca8e1 100644
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -425,7 +425,6 @@ fn compute_map(scanners: &[Map]) -> (Map, Vec<Position3d>) {
+ 
+     map.insert_beacons(&scanners[0].positions);
+ 
+-    let mut done: Vec<(&Map, Vec<Warp>)> = vec![(&scanners[0], Vec::default())];
+     let mut open: Vec<_> = (1..scanners.len()).collect();
+ 
+     let mut i = 0;
+@@ -435,38 +434,16 @@ fn compute_map(scanners: &[Map]) -> (Map, Vec<Position3d>) {
+     while let Some(scanner_index) = open.pop() {
+         let scanner = &scanners[scanner_index];
+ 
+-        let mut warpers: Vec<Warp> = Vec::new();
+-        let mut found = false;
+-
+-        for (done_scanner, done_wrap) in &done {
+-            if let Some((scanner_pos, warp)) =
+-                compute_relative_position_and_orientation_between(&done_scanner, scanner, 12)
+-            {
+-                /*if found == true {
+-                    println!("FOUND MULTIPLE MATCHES");
+-                }*/
+-
+-                let scanner_pos = done_wrap.into_iter().fold(scanner_pos, |p, w| w.warp(p));
+-                println!("Found Scanner {} at {}", scanner_index, scanner_pos);
+-                warpers = done_wrap.to_vec();
+-                warpers.insert(0, warp);
+-                let beacons: Vec<_> = scanner
+-                    .positions
+-                    .iter()
+-                    .map(|&p| (&warpers).into_iter().fold(p, |p, w| w.warp(p)))
+-                    .collect();
+-                /*for p in &beacons {
+-                    println!("{}", p);
+-                }*/
+-                map.insert_beacons(&beacons);
+-                scanner_positions.push(scanner_pos);
+-                found = true;
+-                break;
+-            }
+-        }
+-
+-        if found {
+-            done.push((scanner, warpers));
++        if let Some((scanner_pos, warp)) =
++                    compute_relative_position_and_orientation_between(&map, scanner, 12)
++                {
++                    println!("Found Scanner {} at {}", scanner_index, scanner_pos);
++                    let beacons: Vec<_> = scanner.positions.iter().map(|&p| warp.warp(p)).collect();
++                    /*for p in &beacons {
++                        println!("{}", p);
++                    }*/
++                    map.insert_beacons(&beacons);
++                    scanner_positions.push(scanner_pos);
+         } else {
+             open.insert(0, scanner_index);
+         }
